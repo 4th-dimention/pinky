@@ -1,0 +1,51 @@
+
+program = {top} NULL.
+
+top = procedure | struct | constant | enum | persist.
+
+procedure = "proc" NAME "(" [param_decl {"," param_decl}] ")" ":" type unnamed_block.
+param_decl = NAME : type.
+
+struct = "struct" NAME struct_body.
+struct_body = ["#aligned" | "#free" | "#tight" | "#overlap"] "{" {struct_member} "}".
+struct_member = (NAME ":" type | constant | ("#offset" | "#size" | "#align") expression ";") | struct_body.
+
+constant = "const" NAME ":" type "=" expression ";".
+
+enum = "enum" NAME ":" type "{" {enum_member} "}".
+enum_member = NAME "=" expression ";".
+
+persist = "persist" NAME ":" type ["=" expression] ";".
+
+top_statement = top | statement.
+statement = for | if | block | (goto | label | return | decl | opt_assignment) ";".
+restricted_statement = for | if | block | (goto | return | opt_assignment) ";".
+decl_or_opt_assignment = decl | opt_assignment.
+opt_assignment = expression ["=" expression].
+
+if = "if" "(" expression ")" restricted_statement ["else" restricted_statement].
+for = "for" "(" [decl_or_opt_assignment] ";" [expression] ";" [opt_assignment] ")" restricted_statement.
+block = ["block" NAME] block_body.
+unnamed_block = block_body.
+
+goto = "goto" NAME {"." NAME}.
+label = "label" NAME.
+return = "return" "(" expression ")".
+block_body = "{" {top_statement} "}".
+
+decl = "var" NAME ":" type ["=" expression].
+
+type = primary_type | "*" type | "[" expression "]" type | "(" [loose_param_decl {"," loose_param_decl}] ")" ":") type.
+loose_param_decl = [NAME] ":" type.
+primary_type = NAME | "exprtype" "(" expression ")".
+
+expression = clause {("||") clause}.
+clause = predicate {("&&") predicate}.
+predicate = formula {("==" | "!=" | "<" | ">" | "<=" | ">=") formula}.
+formula = term {("+" | "-" | "|" | "^") term}.
+term = unary {("*" | "/" | "%" | "&" | "<<" | ">>") unary}.
+unary = ("-" | "!" | "~" | "&" | "*" | "cast" "(" type ")") unary | postfix.
+postfix = factor {"[" expression "]" | "(" [expression {"," expression}] ")" | "." NAME}.
+factor = NAME | NUMBER | STRING | CHAR | "typesize" "(" type ")" | "exprsize" "(" expression ")" | "(" expression ")".
+
+

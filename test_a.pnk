@@ -1,0 +1,97 @@
+
+// fubar
+
+proc A1(i:[(whiz + 2) ^ (shaz + 2)]i8):void{}
+proc A2(i:[(whiz ^ 2) + (shaz ^ 2)]i8):void{}
+proc B(i:[(a & mask == mask) + 1]i8):void{}
+proc C(i:[a & mask & mask2]i8):void{}
+proc D1(i:[(a < 3) == (b > 3)]i8):void{}
+proc D2(i:[a < 3 == b > 3]i8):void{}
+proc E(i:[!--~!~a]i8):void{}
+proc F(i:[*cast_ptr(*u32)&YOYO]i32):void{}
+proc G(i:[*(ptr + stuff) * 3]f32):void{}
+proc H(i:[(A - (B - C)) - (D - (E - F))]f32):void{}
+proc I(i:[size_list[0]]i8):void{}
+proc J(i:[(size_get + 1)(table, mask&3)]i8):void{}
+proc K(i:[a.b]i8):void{}
+proc L(i:[typesize(*[10]*i32) + exprsize(1 + 2)]i8):void{}
+proc M(i:[(i < 10 && i > 3) + (i == j || i == 0)]i8):void{}
+
+proc fubar(i:i8,
+           j:*[2]*(k:i8):*i8,
+           l:*(m:*(n:i8):*i8, o:[2]i8):i8):*(zzz:i8):i8{
+     return(0);
+}
+
+const whiz = 4;
+const shaz = 8;
+const mask = 3 | (1 << 7);
+persist a:[(whiz + 2) ^ (shaz + 2)]i8;
+
+// arena
+
+struct Arena{
+    base:*u8;
+    pos:int;
+    max:int;
+}
+
+proc make_arena(ptr:*void, size:int):Arena{
+    var arena:Arena;
+    arena.base = ptr;
+    arena.pos = 0;
+    arena.max = size;
+    return(arena);
+}
+
+proc arena_push(arena:*Arena, size:int):*void{
+    var ptr:*void = 0;
+    if (arena.pos + size <= arena.max){
+        ptr = arena.base + arena.pos;
+        arena.pos = arena.pos + size;
+    }
+    return(ptr);
+}
+
+proc arena_align(arena:*Arena, alignment:int):void{
+    var p:int = arena.pos + alignment - 1;
+    arena.pos = p - p % alignment;
+}
+
+proc push_array(arena:*Arena, s1:int, s2:int):*void{
+    var ptr:*void = arena_push(arena, s1*s2);
+    return(ptr);
+}
+
+// main
+
+const word_size = 18_446_744_073_709_551_615;
+
+proc main():void{
+    proc helper(value:int, extra:int):int{
+        persist accum:int = 0;
+        accum = accum + value;
+        var result:int = extra + accum;
+        return(result);
+    }
+    const v_count = 10;
+    var v:[v_count]int;
+
+    for (var i:int = 0; i < v_count; i = i + 1){
+        squares[i] = i*i;
+    }
+
+    for (var j:int = 1; j < 6; j = j + 1){
+        var s:int = 0;
+        for (var i:int = 0; i < v_count; i = i + 1){
+            s = s + v[i];
+        }
+        print_int(s*j);
+        print_string("Heyo world!\n");
+    }
+
+    var new_token:*Token = push_array(arena, exprsize(*new_token), 1);
+
+    return(void);
+}
+

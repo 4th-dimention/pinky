@@ -1,0 +1,13 @@
+struct Arena{
+    ptr:*char;
+    pos:int;
+    max:int;
+}
+proc main(argc:int, argv:**char):int{
+    var x:int = 0;
+    for (var i:int = 0; i < 10; i = i + 1){
+        x = x + i*x + i*i;
+    }
+    return(x);
+}
+

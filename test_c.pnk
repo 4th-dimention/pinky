@@ -1,0 +1,26 @@
+
+struct Foo{
+    #tight{
+        version:short;
+        byte_count:int;
+        planes:short;
+    }
+    #overlap{
+        integer:int;
+        floating:float;
+    }
+    #free{
+        #offset 1;
+        sub_part:int;
+        #offset 3;
+        over_part:int;
+        #offset 4;
+        final_part:int;
+    }
+}
+
+proc main(argc:int, argv:**char):int{
+    var foo:Foo;
+    foo.integer = 3;
+    return(0);
+}

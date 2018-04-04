@@ -1,0 +1,61 @@
+
+const number : u32 = 3;
+
+struct Arena{
+    base:*u8;
+    pos:i32;
+    cap:i32;
+    //base:i32;
+    #overlap{
+        //base:i32;
+        foo:i32;
+        bar:u32;
+    }
+    #tight{
+        //foo:i16;
+        //bar:i32;
+    }
+}
+
+proc push_array(arena:*Arena, size:i32, count:i32):*void{
+    var ptr:*void = 0;
+    if (arena.pos + size <= arena.cap){
+        ptr = arena.base + arena.pos;
+        arena.pos = arena.pos + size;
+        //var ptr:i32;
+    }
+    {
+        var ass:i32;
+    }
+    return(ptr);
+}
+
+struct String16{
+    str:*u16;
+    size:i32;
+    cap:i32;
+}
+
+proc utf8_to_utf16(arena:*Arena, text:*u8, len:i32):String16{
+    var result:String16;
+    result.str = push_array(arena, typesize(u16), 0);
+
+    for (var i:i32 = 0; i < len; i = i + 1){
+        var out:*u16 = push_array(arena, typesize(u16), 1);
+        if (text[i] < 128){
+            *out = text[i];
+        }
+        else{
+            *out = '?';
+        }
+    }
+
+    var length:i32 = (push_array(arena, 0, 0) - result.str);
+    result.size = length;
+    result.cap = length;
+    return(result);
+}
+
+proc main():void{
+
+}

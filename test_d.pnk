@@ -1,0 +1,81 @@
+
+/*
+//proc invalid():void{}
+//struct invalid{}
+//const invalid = 0;
+//enum invalid:i32{}
+//persist invalid:i32;
+*/
+
+/*
+struct foo{
+    a:i32;
+    b:i32;
+
+    c:*():void;
+    
+    #overlap{
+        d:f32;
+        e:*void;
+    }
+    #tight{
+        #aligned{
+            //d:f32;
+            //const a = 100;
+        }
+        const a = 100;
+        //c:i16;
+        //d:i32;
+    }
+}
+// */
+
+enum Thing:i32{
+    foobar = 35;
+}
+
+//*
+proc foo(x:i32, y:i32):i32{
+    //var x:f32 = 0;
+    //var x:f32 = 0;
+    var z:i32 = 0;
+    {
+        //var z:f32 = 0;
+    }
+    {
+        //var y:f32 = 0;
+    }
+    if (x == 0){
+        //var y:f32 = 0;
+    }
+    if (x == 0){
+        if (x == 0){
+            //var y:f32 = 0;
+        }
+        //var y:f32 = 0;
+    }
+    if (x == 0){
+        if (y == 0){
+            var b:i32;
+        }
+        if (y == 0){
+            var b:i32;
+        }
+    }
+    struct Fubar{
+    //struct b{
+        x:i32;
+        y:i32;
+        b:i32;
+    }
+    block bar{
+        //label x;
+        label b;
+    }
+    for (;;){
+        label b;
+        //label bar;
+    }
+}
+// */
+
