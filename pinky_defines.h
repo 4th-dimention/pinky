@@ -26,9 +26,8 @@ typedef i64 imem;
 typedef u64 umem;
 
 #define Stmnt(S) do{ S }while(0)
-#define Break() exit(1)
-#define AssertBreak() \
-Stmnt( fprintf(stderr, "%s:%d: assert\n", __FILE__, __LINE__); Break(); )
+#define Break() Stmnt( i64 *x___ = 0; if (x___ == 0) { x___ = (i64*)&x___; *x___ = 0; } *x___ = 0; )
+#define AssertBreak() Break()
 #define Assert(c) Stmnt( if (!(c)) { AssertBreak(); } )
 #define Implies(a,b) Assert(!(a) || (b))
 #define InvalidPath AssertBreak()

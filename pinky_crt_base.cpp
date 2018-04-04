@@ -5,10 +5,14 @@ Allen Webster
 
 // TOP
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "pinky_defines.h"
+
+internal void
+print_assert_line(char *file, i32 line);
+
+#undef AssertBreak
+#define AssertBreak() Stmnt( print_assert_line(__FILE__, __LINE__); Break(); )
+
 #include "pinky_linked_data_macros.h"
 #include "pinky_arena.h"
 #include "pinky_string.h"
@@ -19,7 +23,15 @@ Allen Webster
 #include "pinky_string.cpp"
 #include "pinky.cpp"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "pinky_printer.cpp"
+
+internal void
+print_assert_line(char *file, i32 line){
+    fprintf(stderr, "%s:%d: assert\n", file, line);
+}
 
 internal String
 load_file(Arena *arena, FILE *file){
