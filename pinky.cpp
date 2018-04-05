@@ -160,10 +160,10 @@ intern_tokens(Arena *arena, Token_Array tokens){
 #undef InternKeyword
     
 #define InternBuiltInType(N,s) built_in_type_name_##N = intern_string(&table, string(#N));
-    BuiltInTypeList(InternBuiltInType,0)
+        BuiltInTypeList(InternBuiltInType,0)
 #undef InternBuiltInType
     
-    Token *token = tokens.tokens;
+        Token *token = tokens.tokens;
     for (i32 i = 0; i < tokens.count; ++i, ++token){
         if (token->type != TokenType_Name){
             continue;
@@ -291,6 +291,7 @@ internal Procedure_Parameter*
 push_procedure_parameter(Parse_Context *ctx, char *name, Type *type){
     Procedure_Parameter *param = push_array(ctx->arena, Procedure_Parameter, 1);
     block_zero(param, sizeof(*param));
+    param->kind = ProcedureParameter;
     param->name = name;
     param->type = type;
     return(param);
@@ -1485,13 +1486,22 @@ fill_names__top_statement(Arena *arena, Name_Space *containing_space, Top_Statem
         case Top_Procedure:
         {
             Name_Space *proc_space = fill_names__new_space(arena, containing_space);
+            top->proc.space = proc_space;
             require(fill_names__add_entry(arena, containing_space, top->proc.name, top, proc_space, true));
+            Node *sent = &top->proc.signature.params;
+            for (Node *n = sent->next;
+                 n != sent;
+                 n = n->next){
+                Procedure_Parameter *param = CastFromMember(Procedure_Parameter, node, n);
+                require(fill_names__add_entry(arena, proc_space, param->name, param, 0, true));
+            }
             require(fill_names__top_statement(arena, proc_space, top->proc.block));
         }break;
         
         case Top_Struct:
         {
             Name_Space *struct_space = fill_names__new_space(arena, containing_space);
+            top->struct_node.space = struct_space;
             require(fill_names__add_entry(arena, containing_space, top->proc.name, top, struct_space, true));
             require(fill_names__struct_body(arena, struct_space, &top->struct_node.body));
         }break;
@@ -1510,22 +1520,27 @@ fill_names__top_statement(Arena *arena, Name_Space *containing_space, Top_Statem
         
         case Statement_For:
         {
-            require(fill_names__top_statement(arena, containing_space, top->for_node.init));
-            require(fill_names__top_statement(arena, containing_space, top->for_node.inc));
-            require(fill_names__top_statement(arena, containing_space, top->for_node.body));
+            Name_Space *for_space = fill_names__new_space(arena, containing_space);
+            top->for_node.space = for_space;
+            require(fill_names__top_statement(arena, for_space, top->for_node.init));
+            require(fill_names__top_statement(arena, for_space, top->for_node.inc));
+            require(fill_names__top_statement(arena, for_space, top->for_node.body));
         }break;
         
         case Statement_If:
         {
-            require(fill_names__top_statement(arena, containing_space, top->if_node.body));
+            Name_Space *if_space = fill_names__new_space(arena, containing_space);
+            top->if_node.space = if_space;
+            require(fill_names__top_statement(arena, if_space, top->if_node.body));
             if (top->if_node.else_body != 0){
-                require(fill_names__top_statement(arena, containing_space, top->if_node.else_body));
+                require(fill_names__top_statement(arena, if_space, top->if_node.else_body));
             }
         }break;
         
         case Statement_Block:
         {
             Name_Space *block_space = fill_names__new_space(arena, containing_space);
+            top->block.space = block_space;
             if (top->block.name != 0){
                 require(fill_names__add_entry(arena, containing_space, top->block.name, top, block_space, true));
             }
@@ -1565,6 +1580,7 @@ fill_names__top_statement(Arena *arena, Name_Space *containing_space, Top_Statem
 internal Name_Space*
 fill_names__program(Arena *arena, Program *program){
     Name_Space *space = fill_names__new_space(arena, 0);
+    program->space = space;
     Node *sent = &program->tops;
     for (Node *n = sent->next;
          n != sent;
@@ -1583,6 +1599,17 @@ fill_names(Arena *arena, Program *program){
         end_temp(temp);
     }
     return(space);
+}
+
+////////////////////////////////
+
+// TODO(allen): Fill a name space with default types and
+// store preresolved built in types.
+
+internal b32
+type_check(Arena *arena, Program *program){
+    // TODO(allen): Iterate AST for type checking.
+    return(true);
 }
 
 // BOTTOM

@@ -81,6 +81,12 @@ int main(int arg, char **argv){
         exit(1);
     }
     
+    b32 type_check_success = type_check(&arena, program);
+    if (!type_check_success){
+        fprintf(stdout, "reject\n");
+        exit(1);
+    }
+    
     fprintf(stdout, "accept\n");
     return(0);
 }

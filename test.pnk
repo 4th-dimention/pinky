@@ -43,7 +43,10 @@ proc utf8_to_utf16(arena:*Arena, text:*u8, len:i32):String16{
     for (var i:i32 = 0; i < len; i = i + 1){
         var out:*u16 = push_array(arena, typesize(u16), 1);
         if (text[i] < 128){
+            //var out:u16;
+            var str:*u16;
             *out = text[i];
+            //var arena:i32;
         }
         else{
             *out = '?';
@@ -56,6 +59,6 @@ proc utf8_to_utf16(arena:*Arena, text:*u8, len:i32):String16{
     return(result);
 }
 
-proc main():void{
+proc main(number_foo:i32):void{
 
 }

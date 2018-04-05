@@ -55,14 +55,14 @@ enum{
 #define EnumDef(N,S) Keyword_##N,
     KeywordList(EnumDef)
 #undef EnumDef
-    Keyword_COUNT
+        Keyword_COUNT
 };
 
 enum{
 #define EnumDef(N,s) BuiltInType_##N,
     BuiltInTypeList(EnumDef,0)
 #undef EnumDef
-    BuiltInType_COUNT
+        BuiltInType_COUNT
 };
 
 ////////////////////////////////
@@ -132,6 +132,8 @@ enum{
     Top_Enum,
     Top_Constant,
     Top_Persist,
+    
+    ProcedureParameter,
     
     Statement_For,
     Statement_If,
@@ -223,6 +225,7 @@ struct Expr_Node{
 };
 
 struct Procedure_Parameter{
+    AST_Kind kind;
     Node node;
     char *text_pos;
     char *name;
@@ -287,10 +290,12 @@ struct Top_Statement{
             char *name;
             Procedure_Signature signature;
             Top_Statement *block;
+            struct Name_Space *space;
         } proc;
         struct{
             char *name;
             Struct_Body body;
+            struct Name_Space *space;
         } struct_node;
         struct{
             char *name;
@@ -307,15 +312,18 @@ struct Top_Statement{
             Expr *check;
             Top_Statement *inc;
             Top_Statement *body;
+            struct Name_Space *space;
         } for_node;
         struct{
             Expr *check;
             Top_Statement *body;
             Top_Statement *else_body;
+            struct Name_Space *space;
         } if_node;
         struct{
             char *name;
             Node stmnts;
+            struct Name_Space *space;
         } block;
         Expr *goto_expr;
         char *label;
@@ -330,6 +338,7 @@ struct Top_Statement{
 
 struct Program{
     Node tops;
+    struct Name_Space *space;
 };
 
 ////////////////////////////////
