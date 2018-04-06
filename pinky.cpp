@@ -1603,12 +1603,38 @@ fill_names(Arena *arena, Program *program){
 
 ////////////////////////////////
 
-// TODO(allen): Fill a name space with default types and
-// store preresolved built in types.
+internal void
+type_check__decl_built_in(Arena *arena, Name_Space *space, char *name, i32 size){
+    Built_In_Type *type = push_array(arena, Built_In_Type, 1);
+    type->kind = BuiltInType;
+    type->size = size;
+    
+    fill_names__add_entry(arena, space, name, type, 0, false);
+}
+
+internal b32
+type_check__top_statement(Top_Statement *top){
+    
+    return(false);
+}
 
 internal b32
 type_check(Arena *arena, Program *program){
-    // TODO(allen): Iterate AST for type checking.
+    Name_Space *built_in_space = fill_names__new_space(arena, 0);
+    
+#define DeclBuiltInType(N,s) type_check__decl_built_in(arena, built_in_space, #N, s);
+    BuiltInTypeList(DeclBuiltInType, 8)
+#undef DeclBuiltInType
+        program->space->parent = built_in_space;
+    
+    Node *sent = &program->tops;
+    for (Node *n = sent->next;
+         n != sent;
+         n = n->next){
+        Top_Statement *top = CastFromMember(Top_Statement, node, n);
+        require(type_check__top_statement(top));
+    }
+    
     return(true);
 }
 

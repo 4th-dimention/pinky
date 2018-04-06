@@ -171,6 +171,8 @@ enum{
     Expr_Char,
     Expr_TypeSize,
     Expr_ExprSize,
+    
+    BuiltInType,
 };
 
 typedef i32 Pack_Style;
@@ -353,6 +355,13 @@ struct Name_Entry{
 struct Name_Space{
     Name_Space *parent;
     Node sent;
+};
+
+////////////////////////////////
+
+struct Built_In_Type{
+    AST_Kind kind;
+    i32 size;
 };
 
 ////////////////////////////////
