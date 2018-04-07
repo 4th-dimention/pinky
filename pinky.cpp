@@ -1612,10 +1612,157 @@ type_check__decl_built_in(Arena *arena, Name_Space *space, char *name, i32 size)
     fill_names__add_entry(arena, space, name, type, 0, false);
 }
 
+internal Type*
+type_check__get_type_of_expr(Name_Space *space, Expr *expr){
+    return(0);
+}
+
+internal Type*
+type_check__resolve_type(Name_Space *space, Type *type){
+    return(0);
+}
+
 internal b32
-type_check__top_statement(Top_Statement *top){
-    
+type_check__can_do_assignment(Type *l_type, Type *r_type){
+    return(intern_cmp(l_type, r_type));
+}
+
+internal b32
+type_check__is_any_integer(Type *type){
     return(false);
+}
+
+internal b32
+type_check__struct_body(Name_Space *space, Struct_Body *body);
+
+internal b32
+type_check__struct_member(Name_Space *space, Struct_Member *member){
+    switch (member->kind){
+        case StructMember_Variable:
+        {}break;
+        
+        case StructMember_Constant:
+        {
+            Top_Statement *decl = member->decl;
+            Type *expr_type = type_check__get_type_of_expr(space, decl->decl.expr);
+            Type *resolved_type = type_check__resolve_type(space, decl->decl.type);
+            require(type_check__can_do_assignment(resolved_type, expr_type));
+        }break;
+        
+        case StructMember_LayoutOffset:
+        case StructMember_LayoutSize:
+        case StructMember_LayoutAlign:
+        {
+            Type *expr_type = type_check__get_type_of_expr(space, member->layout);
+            require(type_check__is_any_integer(expr_type));
+        }break;
+        
+        case StructMember_SubBody:
+        {
+            require(type_check__struct_body(space, &member->body));
+        }break;
+        
+        default:
+        {
+            InvalidPath;
+        }break;
+    }
+    return(false);
+}
+
+internal b32
+type_check__struct_body(Name_Space *space, Struct_Body *body){
+    Node *sent = &body->members;
+    for (Node *n = sent->next;
+         n != sent;
+         n = n->next){
+        Struct_Member *member = CastFromMember(Struct_Member, node, n);
+        require(type_check__struct_member(space, member));
+    }
+    return(true);
+}
+
+internal b32
+type_check__top_statement(Name_Space *space, Top_Statement *top){
+    switch (top->kind){
+        case Top_Procedure:
+        {
+            Top_Statement *block = top->proc.block;
+            require(type_check__top_statement(top->proc.space, block));
+        }break;
+        
+        case Top_Struct:
+        {
+            Struct_Body *body = &top->struct_node.body;
+            require(type_check__struct_body(top->struct_node.space, body));
+        }break;
+        
+        case Top_Enum:
+        {
+            
+        }break;
+        
+        case Top_Constant:
+        {
+            
+        }break;
+        
+        case Top_Persist:
+        {
+            
+        }break;
+        
+        case Statement_For:
+        {
+            
+        }break;
+        
+        case Statement_If:
+        {
+            
+        }break;
+        
+        case Statement_Block:
+        {
+            
+        }break;
+        
+        case Statement_Goto:
+        {
+            
+        }break;
+        
+        case Statement_Label:
+        {
+            
+        }break;
+        
+        case Statement_Return:
+        {
+            
+        }break;
+        
+        case Statement_Decl:
+        {
+            
+        }break;
+        
+        case Statement_Assignment:
+        {
+            
+        }break;
+        
+        case Statement_Expression:
+        {
+            
+        }break;
+        
+        default:
+        {
+            InvalidPath;
+        }break;
+    }
+    return(true);
 }
 
 internal b32
@@ -1632,7 +1779,7 @@ type_check(Arena *arena, Program *program){
          n != sent;
          n = n->next){
         Top_Statement *top = CastFromMember(Top_Statement, node, n);
-        require(type_check__top_statement(top));
+        require(type_check__top_statement(program->space, top));
     }
     
     return(true);
