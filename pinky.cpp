@@ -1628,7 +1628,12 @@ type_check__can_do_assignment(Type *l_type, Type *r_type){
 }
 
 internal b32
-type_check__is_any_integer(Type *type){
+type_check__is_integer(Type *type){
+    return(false);
+}
+
+internal b32
+type_check__is_boolean(Type *type){
     return(false);
 }
 
@@ -1654,7 +1659,7 @@ type_check__struct_member(Name_Space *space, Struct_Member *member){
         case StructMember_LayoutAlign:
         {
             Type *expr_type = type_check__get_type_of_expr(space, member->layout);
-            require(type_check__is_any_integer(expr_type));
+            require(type_check__is_integer(expr_type));
         }break;
         
         case StructMember_SubBody:
@@ -1699,22 +1704,43 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
         
         case Top_Enum:
         {
-            
+            Type *resolved_type = type_check__resolve_type(space, top->enum_node.type);
+            Node *sent = &top->enum_node.members;
+            for (Node *n = sent->next;
+                 n != sent;
+                 n = n->next){
+                Enum_Member *member = CastFromMember(Enum_Member, node, n);
+                Type *expr_type = type_check__get_type_of_expr(space, member->expr);
+                require(type_check__can_do_assignment(resolved_type, expr_type));
+            }
         }break;
         
         case Top_Constant:
-        {
-            
-        }break;
-        
         case Top_Persist:
         {
-            
+            Type *resolved_type = type_check__resolve_type(space, top->decl.type);
+            Type *expr_type = type_check__get_type_of_expr(space, top->decl.expr);
+            require(type_check__can_do_assignment(resolved_type, expr_type));
         }break;
         
         case Statement_For:
         {
+            Name_Space *for_space = top->for_node.space;
             
+            if (top->for_node.init != 0){
+                type_check__top_statement(for_space, top->for_node.init);
+            }
+            
+            if (top->for_node.check != 0){
+                Type *expr_type = type_check__get_type_of_expr(for_space, top->for_node.check);
+                require(type_check__is_boolean(expr_type));
+            }
+            
+            if (top->for_node.inc != 0){
+                type_check__top_statement(for_space, top->for_node.init);
+            }
+            
+            type_check__top_statement(for_space, top->for_node.body);
         }break;
         
         case Statement_If:
