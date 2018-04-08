@@ -1638,6 +1638,16 @@ type_check__is_boolean(Type *type){
 }
 
 internal b32
+type_check__is_goto_expr(Expr *expr){
+    return(false);
+}
+
+internal b32
+type_check__is_lvalue_expr(Expr *expr){
+    return(false);
+}
+
+internal b32
 type_check__struct_body(Name_Space *space, Struct_Body *body);
 
 internal b32
@@ -1688,12 +1698,12 @@ type_check__struct_body(Name_Space *space, Struct_Body *body){
 }
 
 internal b32
-type_check__top_statement(Name_Space *space, Top_Statement *top){
+type_check__top_statement(Top_Statement *current_proc, Name_Space *space, Top_Statement *top){
     switch (top->kind){
         case Top_Procedure:
         {
             Top_Statement *block = top->proc.block;
-            require(type_check__top_statement(top->proc.space, block));
+            require(type_check__top_statement(top, top->proc.space, block));
         }break;
         
         case Top_Struct:
@@ -1729,7 +1739,7 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
             Name_Space *for_space = top->for_node.space;
             
             if (top->for_node.init != 0){
-                require(type_check__top_statement(for_space, top->for_node.init));
+                require(type_check__top_statement(current_proc, for_space, top->for_node.init));
             }
             
             if (top->for_node.check != 0){
@@ -1738,10 +1748,10 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
             }
             
             if (top->for_node.inc != 0){
-                require(type_check__top_statement(for_space, top->for_node.init));
+                require(type_check__top_statement(current_proc, for_space, top->for_node.init));
             }
             
-            require(type_check__top_statement(for_space, top->for_node.body));
+            require(type_check__top_statement(current_proc, for_space, top->for_node.body));
         }break;
         
         case Statement_If:
@@ -1751,21 +1761,29 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
             Type *expr_type = type_check__get_type_of_expr(if_space, top->if_node.check);
             require(type_check__is_boolean(expr_type));
             
-            require(type_check__top_statement(if_space, top->if_node.body));
+            require(type_check__top_statement(current_proc, if_space, top->if_node.body));
             
             if (top->if_node.else_body != 0){
-                require(type_check__top_statement(if_space, top->if_node.else_body));
+                require(type_check__top_statement(current_proc, if_space, top->if_node.else_body));
             }
         }break;
         
         case Statement_Block:
         {
+            Name_Space *block_space = top->block.space;
             
+            Node *sent = &top->block.stmnts;
+            for (Node *n = sent->next;
+                 n != sent;
+                 n = n->next){
+                Top_Statement *stmnt = CastFromMember(Top_Statement, node, n);
+                require(type_check__top_statement(current_proc, block_space, stmnt));
+            }
         }break;
         
         case Statement_Goto:
         {
-            
+            require(type_check__is_goto_expr(top->goto_expr));
         }break;
         
         case Statement_Label:
@@ -1773,17 +1791,22 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
         
         case Statement_Return:
         {
-            
+            Type *expr_type = type_check__get_type_of_expr(space, top->return_expr);
+            require(type_check__can_do_assignment(current_proc->proc.signature.ret, expr_type));
         }break;
         
         case Statement_Assignment:
         {
-            
+            require(type_check__is_lvalue_expr(top->assignment.l));
+            Type *l_type = type_check__get_type_of_expr(space, top->assignment.l);
+            Type *r_type = type_check__get_type_of_expr(space, top->assignment.r);
+            require(type_check__can_do_assignment(l_type, r_type));
         }break;
         
         case Statement_Expression:
         {
-            
+            Type *type = type_check__get_type_of_expr(space, top->expr);
+            require(type != 0);
         }break;
         
         default:
@@ -1808,7 +1831,7 @@ type_check(Arena *arena, Program *program){
          n != sent;
          n = n->next){
         Top_Statement *top = CastFromMember(Top_Statement, node, n);
-        require(type_check__top_statement(program->space, top));
+        require(type_check__top_statement(0, program->space, top));
     }
     
     return(true);
