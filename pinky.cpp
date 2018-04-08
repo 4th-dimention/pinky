@@ -1717,6 +1717,7 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
         
         case Top_Constant:
         case Top_Persist:
+        case Statement_Decl:
         {
             Type *resolved_type = type_check__resolve_type(space, top->decl.type);
             Type *expr_type = type_check__get_type_of_expr(space, top->decl.expr);
@@ -1728,7 +1729,7 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
             Name_Space *for_space = top->for_node.space;
             
             if (top->for_node.init != 0){
-                type_check__top_statement(for_space, top->for_node.init);
+                require(type_check__top_statement(for_space, top->for_node.init));
             }
             
             if (top->for_node.check != 0){
@@ -1737,15 +1738,24 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
             }
             
             if (top->for_node.inc != 0){
-                type_check__top_statement(for_space, top->for_node.init);
+                require(type_check__top_statement(for_space, top->for_node.init));
             }
             
-            type_check__top_statement(for_space, top->for_node.body);
+            require(type_check__top_statement(for_space, top->for_node.body));
         }break;
         
         case Statement_If:
         {
+            Name_Space *if_space = top->if_node.space;
             
+            Type *expr_type = type_check__get_type_of_expr(if_space, top->if_node.check);
+            require(type_check__is_boolean(expr_type));
+            
+            require(type_check__top_statement(if_space, top->if_node.body));
+            
+            if (top->if_node.else_body != 0){
+                require(type_check__top_statement(if_space, top->if_node.else_body));
+            }
         }break;
         
         case Statement_Block:
@@ -1759,16 +1769,9 @@ type_check__top_statement(Name_Space *space, Top_Statement *top){
         }break;
         
         case Statement_Label:
-        {
-            
-        }break;
+        {}break;
         
         case Statement_Return:
-        {
-            
-        }break;
-        
-        case Statement_Decl:
         {
             
         }break;
