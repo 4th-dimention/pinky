@@ -241,6 +241,8 @@ struct Procedure_Signature{
 struct Type{
     AST_Kind kind;
     char *text_pos;
+    i32 size;
+    i32 align;
     union{
         char *name;
         struct{
@@ -359,10 +361,9 @@ struct Name_Space{
 
 ////////////////////////////////
 
-struct Built_In_Type{
-    AST_Kind kind;
-    i32 size;
-};
+#define DeclBuiltInType(N,s) global Type *type_##N = 0;
+BuiltInTypeList(DeclBuiltInType, 0)
+#undef DeclBuiltInType
 
 ////////////////////////////////
 

@@ -1603,13 +1603,15 @@ fill_names(Arena *arena, Program *program){
 
 ////////////////////////////////
 
-internal void
+internal Type*
 type_check__decl_built_in(Arena *arena, Name_Space *space, char *name, i32 size){
-    Built_In_Type *type = push_array(arena, Built_In_Type, 1);
+    Type *type = push_array(arena, Type, 1);
+    block_zero(type, sizeof(*type));
     type->kind = BuiltInType;
     type->size = size;
-    
+    type->align = size;
     fill_names__add_entry(arena, space, name, type, 0, false);
+    return(type);
 }
 
 internal Type*
@@ -1629,11 +1631,27 @@ type_check__can_do_assignment(Type *l_type, Type *r_type){
 
 internal b32
 type_check__is_integer(Type *type){
+    if (type == type_i8 ||
+        type == type_i16 ||
+        type == type_i32 ||
+        type == type_i64 ||
+        type == type_imem ||
+        type == type_u8 ||
+        type == type_u16 ||
+        type == type_u32 ||
+        type == type_u64 ||
+        type == type_umem){
+        return(true);
+    }
     return(false);
 }
 
 internal b32
 type_check__is_boolean(Type *type){
+    if (type == type_b8 ||
+        type == type_b32){
+        return(true);
+    }
     return(false);
 }
 
@@ -1821,7 +1839,7 @@ internal b32
 type_check(Arena *arena, Program *program){
     Name_Space *built_in_space = fill_names__new_space(arena, 0);
     
-#define DeclBuiltInType(N,s) type_check__decl_built_in(arena, built_in_space, #N, s);
+#define DeclBuiltInType(N,s) type_##N = type_check__decl_built_in(arena, built_in_space, #N, s);
     BuiltInTypeList(DeclBuiltInType, 8)
 #undef DeclBuiltInType
         program->space->parent = built_in_space;
